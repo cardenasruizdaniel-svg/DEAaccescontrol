@@ -75,15 +75,15 @@ services:
           type: web
           property: host
 
+  - type: redis
+    name: dla-access-redis
+    region: oregon
+    plan: free
+    ipAllowList: []
+
 databases:
   - name: dla-access-db
     plan: starter
     databaseName: dla_access_enterprise
     user: dla
     region: oregon
-
-redis:
-  - name: dla-access-redis
-    plan: free
-    region: oregon
-    ipAllowList: []
