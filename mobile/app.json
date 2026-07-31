@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "DLA Access Enterprise",
+    "slug": "dla-access-enterprise",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1a56db"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.dlaredes.dlaaccess",
+      "config": {
+        "googleMapsApiKey": "YOUR_GOOGLE_MAPS_API_KEY"
+      },
+      "infoPlist": {
+        "NSCameraUsageDescription": "DLA Access requiere acceso a la c\u00e1mara para verificaci\u00f3n biom\u00e9trica facial",
+        "NSLocationWhenInUseUsageDescription": "DLA Access requiere acceso a la ubicaci\u00f3n para geolocalizaci\u00f3n",
+        "NSFaceIDUsageDescription": "DLA Access usa Face ID para autenticaci\u00f3n segura"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1a56db"
+      },
+      "package": "com.dlaredes.dlaaccess",
+      "config": {
+        "googleMaps": { "apiKey": "YOUR_GOOGLE_MAPS_API_KEY" }
+      },
+      "permissions": ["CAMERA", "ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION", "USE_BIOMETRIC", "USE_FINGERPRINT"]
+    },
+    "plugins": ["expo-camera", "expo-location"]
+  }
+}

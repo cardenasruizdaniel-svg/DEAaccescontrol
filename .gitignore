@@ -1,0 +1,47 @@
+# Environment / secrets
+.env
+*.env
+!*.env.example
+backend/.env
+frontend/.env.local
+
+# Dependencies
+node_modules/
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Builds
+.next/
+dist/
+build/
+*.tsbuildinfo
+
+# Runtime data
+backend/uploads/
+uploads/
+*.log
+logs/
+
+# Tests / coverage
+.coverage
+htmlcov/
+coverage/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Expo
+.expo/
+mobile/.expo/

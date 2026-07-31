@@ -1,0 +1,44 @@
+{
+  "name": "DLA Access Enterprise",
+  "short_name": "DLA Access",
+  "description": "ERP Enterprise - Control de Acceso, Geolocalización y Gestión de Personal",
+  "start_url": "/login",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f172a",
+  "theme_color": "#1a56db",
+  "categories": ["business", "productivity", "security"],
+  "lang": "es-CO",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Inicio",
+      "description": "Ver dashboard principal",
+      "url": "/dashboard"
+    },
+    {
+      "name": "Mi Programación",
+      "short_name": "Turnos",
+      "description": "Ver mi programación de turnos",
+      "url": "/scheduling"
+    }
+  ]
+}

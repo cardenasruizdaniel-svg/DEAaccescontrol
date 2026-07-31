@@ -1,0 +1,148 @@
+from fastapi import APIRouter, Query
+from sqlalchemy import func
+
+from app.core.deps import CurrentUser, DbSession
+from app.modules.clients.application.service import ClientService
+from app.modules.clients.infrastructure.repositories import (
+    ClientContactRepository,
+    ClientLocationRepository,
+    ClientRepository,
+    PatientRepository,
+    ProjectRepository,
+)
+from app.modules.clients.presentation.schemas import (
+    ClientCreateRequest,
+    ClientListResponse,
+    ClientUpdateRequest,
+    ContactCreateRequest,
+    LocationCreateRequest,
+    PatientCreateRequest,
+)
+
+router = APIRouter(prefix="/clients", tags=["Clients"])
+
+
+def get_service(db: DbSession) -> ClientService:
+    return ClientService(
+        client_repo=ClientRepository(db), patient_repo=PatientRepository(db),
+        project_repo=ProjectRepository(db), contact_repo=ClientContactRepository(db),
+        location_repo=ClientLocationRepository(db),
+    )
+
+
+@router.post("", status_code=201)
+async def create_client(body: ClientCreateRequest, current_user: CurrentUser, db: DbSession) -> dict:
+    return await get_service(db).create_client(**body.model_dump())
+
+
+@router.get("", response_model=ClientListResponse)
+async def list_clients(
+    current_user: CurrentUser, db: DbSession,
+    company_id: str | None = Query(None), client_type: str | None = Query(None),
+    status: str | None = Query(None), search: str | None = Query(None),
+    page: int = Query(1, ge=1), page_size: int = Query(25, ge=1, le=100),
+) -> ClientListResponse:
+    result = await get_service(db).list_clients(
+        company_id=company_id, client_type=client_type, status=status,
+        search=search, page=page, page_size=page_size,
+    )
+    return ClientListResponse(**result.__dict__)
+
+
+@router.get("/{client_id}")
+async def get_client(client_id: str, current_user: CurrentUser, db: DbSession) -> dict:
+    return await get_service(db).get_client(client_id)
+
+
+@router.put("/{client_id}")
+async def update_client(client_id: str, body: ClientUpdateRequest, current_user: CurrentUser, db: DbSession) -> dict:
+    return await get_service(db).update_client(client_id, **body.model_dump(exclude_unset=True))
+
+
+@router.delete("/{client_id}")
+async def delete_client(client_id: str, current_user: CurrentUser, db: DbSession) -> dict:
+    return await get_service(db).delete_client(client_id)
+
+
+@router.patch("/{client_id}/status")
+async def update_client_status(client_id: str, body: dict, current_user: CurrentUser, db: DbSession) -> dict:
+    new_status = body.get("status", "inactive")
+    return await get_service(db).update_status(client_id, new_status)
+
+
+@router.get("/{client_id}/contacts")
+async def list_contacts(client_id: str, current_user: CurrentUser, db: DbSession) -> list[dict]:
+    return await get_service(db).list_contacts(client_id)
+
+
+@router.post("/{client_id}/contacts", status_code=201)
+async def add_contact(client_id: str, body: ContactCreateRequest, current_user: CurrentUser, db: DbSession) -> dict:
+    return await get_service(db).add_contact(client_id, **body.model_dump())
+
+
+@router.delete("/{client_id}/contacts/{contact_id}")
+async def delete_contact(client_id: str, contact_id: str, current_user: CurrentUser, db: DbSession) -> dict:
+    return await get_service(db).delete_contact(client_id, contact_id)
+
+
+@router.get("/{client_id}/locations")
+async def list_locations(client_id: str, current_user: CurrentUser, db: DbSession) -> list[dict]:
+    return await get_service(db).list_locations(client_id)
+
+
+@router.post("/{client_id}/locations", status_code=201)
+async def add_location(client_id: str, body: LocationCreateRequest, current_user: CurrentUser, db: DbSession) -> dict:
+    return await get_service(db).add_location(client_id, **body.model_dump())
+
+
+@router.delete("/{client_id}/locations/{location_id}")
+async def delete_location(client_id: str, location_id: str, current_user: CurrentUser, db: DbSession) -> dict:
+    return await get_service(db).delete_location(client_id, location_id)
+
+
+@router.get("/{client_id}/patients")
+async def list_patients(
+    client_id: str, current_user: CurrentUser, db: DbSession,
+    search: str | None = Query(None), page: int = Query(1, ge=1), page_size: int = Query(25),
+) -> ClientListResponse:
+    result = await get_service(db).list_patients(client_id, search=search, page=page, page_size=page_size)
+    return ClientListResponse(**result.__dict__)
+
+
+@router.post("/{client_id}/patients", status_code=201)
+async def create_patient(client_id: str, body: PatientCreateRequest, current_user: CurrentUser, db: DbSession) -> dict:
+    return await get_service(db).create_patient(client_id, **body.model_dump())
+
+
+@router.delete("/{client_id}/patients/{patient_id}")
+async def delete_patient(client_id: str, patient_id: str, current_user: CurrentUser, db: DbSession) -> dict:
+    return await get_service(db).delete_patient(client_id, patient_id)
+
+
+@router.post("/{client_id}/projects", status_code=201)
+async def create_project(client_id: str, code: str, name: str, current_user: CurrentUser, db: DbSession) -> dict:
+    return await get_service(db).create_project(client_id, code=code, name=name)
+
+
+@router.get("/{client_id}/personas")
+async def list_personas(
+    client_id: str, current_user: CurrentUser, db: DbSession,
+    search: str | None = Query(None), page: int = Query(1, ge=1), page_size: int = Query(25),
+):
+    from sqlalchemy import select
+    from app.shared.database.models_clients import Persona
+    stmt = select(Persona).where(Persona.client_id == client_id, Persona.is_deleted == False)
+    if search:
+        stmt = stmt.where(Persona.first_name.ilike(f"%{search}%") | Persona.last_name.ilike(f"%{search}%"))
+    result = await db.execute(stmt.offset((page - 1) * page_size).limit(page_size))
+    personas = result.scalars().all()
+    count_stmt = select(func.count(Persona.id)).where(Persona.client_id == client_id, Persona.is_deleted == False)
+    total = (await db.execute(count_stmt)).scalar() or 0
+    return {"items": [
+        {
+            "id": p.id, "first_name": p.first_name, "last_name": p.last_name,
+            "document_type": p.document_type, "document_number": p.document_number,
+            "email": p.email, "phone": p.phone, "status": p.status,
+        }
+        for p in personas
+    ], "total": total, "page": page, "page_size": page_size}

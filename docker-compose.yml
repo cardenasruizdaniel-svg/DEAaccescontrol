@@ -1,0 +1,97 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dla_postgres
+    environment:
+      POSTGRES_DB: dla_access_enterprise
+      POSTGRES_USER: dla
+      POSTGRES_PASSWORD: dla_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dla -d dla_access_enterprise"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: dla_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: dla_rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: dla_backend
+    environment:
+      DATABASE_URL: postgresql+asyncpg://dla:dla_password@postgres:5432/dla_access_enterprise
+      REDIS_URL: redis://redis:6379/0
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      SECRET_KEY: ${SECRET_KEY:-dla-access-enterprise-production-secret-key-change-me}
+      DEBUG: "false"
+      ENVIRONMENT: production
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - upload_data:/app/uploads
+    command: >
+      sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: dla_frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://backend:8000/api/v1
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: dla_celery_worker
+    environment:
+      DATABASE_URL: postgresql+asyncpg://dla:dla_password@postgres:5432/dla_access_enterprise
+      REDIS_URL: redis://redis:6379/0
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      - backend
+    command: celery -A app.core.tasks worker --loglevel=info
+
+volumes:
+  postgres_data:
+  redis_data:
+  upload_data:

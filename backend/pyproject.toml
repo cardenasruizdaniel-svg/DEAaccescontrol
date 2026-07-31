@@ -1,0 +1,79 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "dla-access-enterprise"
+version = "1.0.0"
+description = "DLA Access Enterprise - ERP System by DLA Redes y Seguridad"
+readme = "README.md"
+license = {text = "Proprietary"}
+requires-python = ">=3.11"
+authors = [
+    {name = "DLA Redes y Seguridad", email = "dev@dlaredes.com.co"}
+]
+
+dependencies = [
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "sqlalchemy>=2.0.23",
+    "asyncpg>=0.29.0",
+    "alembic>=1.13.0",
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.1.0",
+    "python-jose[cryptography]>=3.3.0",
+    "passlib[bcrypt]>=1.7.4",
+    "python-multipart>=0.0.6",
+    "httpx>=0.25.0",
+    "redis>=5.0.0",
+    "celery>=5.3.0",
+    "python-dateutil>=2.8.2",
+    "pytz>=2023.3",
+    "openpyxl>=3.1.0",
+    "reportlab>=4.0.0",
+    "Pillow>=10.1.0",
+    "opencv-python>=4.8.0",
+    "face-recognition>=1.3.0",
+    "geopy>=2.4.0",
+    "shapely>=2.0.0",
+    "gevent>=23.9.0",
+    "websockets>=12.0",
+    "aiofiles>=23.2.0",
+    "python-magic>=0.4.27",
+    "jinja2>=3.1.0",
+    "bcrypt>=4.1.0",
+    "pyotp>=2.9.0",
+    "qrcode>=7.4",
+    "pandas>=2.1.0",
+    "numpy>=1.26.0",
+    "scikit-learn>=1.3.0",
+]
+
+[project.optional-dependencies]
+prod = []
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=4.1.0",
+    "mypy>=1.7.0",
+    "ruff>=0.1.0",
+    "black>=23.12.0",
+    "httpx>=0.25.0",
+    "factory-boy>=3.3.0",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "S", "B", "A", "COM", "C4", "DTZ", "ISC", "ICN", "PIE", "PT", "RSE", "RET", "SLF", "SIM", "TID", "TCH", "ARG", "PTH"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+plugins = ["pydantic.mypy"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
