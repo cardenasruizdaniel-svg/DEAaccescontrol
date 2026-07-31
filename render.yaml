@@ -1,30 +1,33 @@
 services:
   - type: web
-    name: dla-backend
+    name: dla-access-backend
     env: python
-    region: ohio
+    rootDir: backend
+    region: oregon
     plan: starter
     buildCommand: pip install -e ".[prod]"
-    startCommand: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2
+    startCommand: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
       - key: ENVIRONMENT
         value: production
+      - key: APP_NAME
+        value: "DLA Access Enterprise"
       - key: SECRET_KEY
         generateValue: true
       - key: ENCRYPTION_KEY
         generateValue: true
       - key: DATABASE_URL
         fromDatabase:
-          name: dla-db
+          name: dla-access-db
           property: connectionString
       - key: REDIS_URL
         fromService:
-          name: dla-redis
+          name: dla-access-redis
           type: redis
           property: connectionString
       - key: CORS_ORIGINS
-        value: '["https://dla-frontend.onrender.com","https://dla-pwa.onrender.com"]'
+        value: '["https://dla-access-frontend.onrender.com","https://dla-access-pwa.onrender.com"]'
       - key: RABBITMQ_URL
         value: ""
       - key: GOOGLE_MAPS_API_KEY
@@ -41,9 +44,10 @@ services:
         sync: false
 
   - type: web
-    name: dla-frontend
+    name: dla-access-frontend
     env: node
-    region: ohio
+    rootDir: frontend
+    region: oregon
     plan: starter
     buildCommand: npm ci && npm run build
     startCommand: npm start
@@ -53,32 +57,33 @@ services:
         value: production
       - key: NEXT_PUBLIC_API_URL
         fromService:
-          name: dla-backend
+          name: dla-access-backend
           type: web
           property: host
-        value: /api/v1
 
   - type: web
-    name: dla-pwa
+    name: dla-access-pwa
     env: static
-    region: ohio
+    rootDir: pwa
+    region: oregon
     buildCommand: npm ci && npm run build
     staticPublishPath: ./dist
     envVars:
       - key: VITE_API_URL
         fromService:
-          name: dla-backend
+          name: dla-access-backend
           type: web
           property: host
-        value: /api/v1
 
 databases:
-  - name: dla-db
+  - name: dla-access-db
     plan: starter
-    databaseName: dla_access
-    region: ohio
+    databaseName: dla_access_enterprise
+    user: dla
+    region: oregon
 
 redis:
-  - name: dla-redis
-    plan: starter
-    region: ohio
+  - name: dla-access-redis
+    plan: free
+    region: oregon
+    ipAllowList: []
