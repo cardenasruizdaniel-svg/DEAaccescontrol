@@ -65,7 +65,6 @@ services:
     name: dla-access-pwa
     env: static
     rootDir: pwa
-    region: oregon
     buildCommand: npm ci && npm run build
     staticPublishPath: ./dist
     envVars:
